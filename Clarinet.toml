@@ -1,0 +1,34 @@
+[project]
+name = 'Pharmaceutical-Supply-Chain-Verification'
+description = ''
+authors = []
+telemetry = true
+cache_dir = './.cache'
+requirements = []
+[contracts.authentication]
+path = 'contracts/authentication.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.batch-tracking]
+path = 'contracts/batch-tracking.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.manufacturer-verification]
+path = 'contracts/manufacturer-verification.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.temperature-monitoring]
+path = 'contracts/temperature-monitoring.clar'
+clarity_version = 2
+epoch = 2.5
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
