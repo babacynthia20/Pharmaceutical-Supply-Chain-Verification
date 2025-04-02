@@ -1,30 +1,79 @@
+;; Manufacturer Verification Contract
+;; This contract validates legitimate drug producers
 
-;; title: manufacturer-verification
-;; version:
-;; summary:
-;; description:
+;; Define data maps
+(define-map manufacturers
+  { manufacturer-id: (string-ascii 20) }
+  {
+    name: (string-ascii 50),
+    license-number: (string-ascii 20),
+    is-verified: bool,
+    verification-date: uint
+  }
+)
 
-;; traits
-;;
+;; Define error codes
+(define-constant ERR-NOT-AUTHORIZED u100)
+(define-constant ERR-ALREADY-REGISTERED u101)
+(define-constant ERR-NOT-FOUND u102)
 
-;; token definitions
-;;
+;; Define contract owner
+(define-data-var contract-owner principal tx-sender)
 
-;; constants
-;;
+;; Check if caller is contract owner
+(define-private (is-contract-owner)
+  (is-eq tx-sender (var-get contract-owner))
+)
 
-;; data vars
-;;
+;; Register a new manufacturer
+(define-public (register-manufacturer
+    (manufacturer-id (string-ascii 20))
+    (name (string-ascii 50))
+    (license-number (string-ascii 20))
+  )
+  (begin
+    (asserts! (is-contract-owner) (err ERR-NOT-AUTHORIZED))
+    (asserts! (is-none (map-get? manufacturers { manufacturer-id: manufacturer-id })) (err ERR-ALREADY-REGISTERED))
 
-;; data maps
-;;
+    (ok (map-set manufacturers
+      { manufacturer-id: manufacturer-id }
+      {
+        name: name,
+        license-number: license-number,
+        is-verified: false,
+        verification-date: u0
+      }
+    ))
+  )
+)
 
-;; public functions
-;;
+;; Verify a manufacturer
+(define-public (verify-manufacturer (manufacturer-id (string-ascii 20)))
+  (begin
+    (asserts! (is-contract-owner) (err ERR-NOT-AUTHORIZED))
+    (match (map-get? manufacturers { manufacturer-id: manufacturer-id })
+      manufacturer (ok (map-set manufacturers
+                        { manufacturer-id: manufacturer-id }
+                        (merge manufacturer {
+                          is-verified: true,
+                          verification-date: block-height
+                        })
+                      ))
+      (err ERR-NOT-FOUND)
+    )
+  )
+)
 
-;; read only functions
-;;
+;; Check if a manufacturer is verified
+(define-read-only (is-manufacturer-verified (manufacturer-id (string-ascii 20)))
+  (match (map-get? manufacturers { manufacturer-id: manufacturer-id })
+    manufacturer (ok (get is-verified manufacturer))
+    (err ERR-NOT-FOUND)
+  )
+)
 
-;; private functions
-;;
+;; Get manufacturer details
+(define-read-only (get-manufacturer-details (manufacturer-id (string-ascii 20)))
+  (map-get? manufacturers { manufacturer-id: manufacturer-id })
+)
 
